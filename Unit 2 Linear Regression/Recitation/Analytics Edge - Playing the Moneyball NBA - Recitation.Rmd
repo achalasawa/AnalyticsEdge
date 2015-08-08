@@ -1,0 +1,153 @@
+---
+title: "Analytics Edge - Playing the Moneyball NBA - Recitation"
+author: "Achal Asawa"
+date: "July 31, 2015"
+output: html_document
+---
+
+This is Achal Asawa checking in!
+In this exercise we are going to predict the points required to make it to NBA playoffs!
+
+Lets load the data set:
+```{r cache = TRUE}
+setwd("~/Desktop/Analytics Edge/Unit 2")
+NBA = read.csv("NBA_train.csv")
+str(NBA)
+```
+
+We have the following variables:
+
+- SeasonEnd - year the season ended
+
+- Playoffs - did team make it to playoffs? 1 = yes 0 = no
+
+- W - Regular season wins
+
+- PTS - points scored during regular season
+
+- oppPTS - opponents point scored
+
+- FG total successful field goals
+
+- FGA means number of field goals that were attempted
+
+- X2 total successful two pointers
+
+- X2A means number of two pointers that were attempted
+
+- X3 total successful three pointers
+
+- X3A means number of three pointers that were attempted
+
+- FT total successful free throws
+
+- FTA means number of free throws that were attempted
+
+- ORB stands for Offensive Rebounds
+
+- DRB stands for Defensive Rebounds
+
+- AST stands for Assistance
+
+- STL stands for Steals
+
+- BLK stands for Blocks
+
+- TOV stands for Turnovers
+
+Lets look
+```{r, cache = TRUE}
+table(NBA$W, NBA$Playoffs)
+NBA$PTSdiff = NBA$PTS - NBA$oppPTS
+plot(NBA$PTSdiff, NBA$W)
+```
+
+## Very strong linear relationship!
+
+Lets create a univariate linear regression model! 
+
+```{r, cache = TRUE}
+WinsReg = lm(W ~ PTSdiff, data = NBA)
+summary(WinsReg)
+```
+
+Lets create a multivariate linear regression model!
+```{r, cache = TRUE}
+PointsReg = lm(PTS ~ X2PA + X3PA + FTA + AST + ORB + DRB + TOV + STL + BLK, data = NBA)
+summary(PointsReg)
+```
+
+Lets compute the SSE and RMSE for our new model :)
+
+```{r, cache = TRUE}
+SSE = sum(PointsReg$residuals^2)
+SSE
+RMSE = sqrt(SSE/nrow(NBA))
+RMSE
+```
+
+Wow, these values are big, lets check the average value of points scored in a season
+```{r, cache = TRUE}
+mean(NBA$PTS)
+```
+
+Hmmm, not too bad, our RMSE score of `r RMSE` is not too bad!
+
+Now, lets remove the insignificant variables to see if we can improve our model or reduce the number of variables in the model
+
+Lets create a new regression model without TOV since it is the least significant variable! (look at p value!)
+
+Once the new model is created keep removing other insignificant variables!
+
+```{r, cache=TRUE}
+PointsReg2 = lm(PTS ~ X2PA + X3PA + FTA + AST + ORB + DRB + STL + BLK, data = NBA)
+summary(PointsReg2)
+PointsReg3 = lm(PTS ~ X2PA + X3PA + FTA + AST + ORB + STL + BLK, data = NBA)
+summary(PointsReg3)
+PointsReg4 = lm(PTS ~ X2PA + X3PA + FTA + AST + ORB + STL, data = NBA)
+summary(PointsReg4)
+```
+
+Looks like PointsReg4 is the best model we can build! 
+Lets look at SSE and RMSE!
+
+```{r, cache = TRUE}
+SSE_4 = sum(PointsReg4$residuals^2)
+SSE_4
+RMSE_4 = sqrt(SSE_4/nrow(NBA))
+RMSE_4
+```
+
+Not bad! 
+
+Lets get on with the exciting part! 
+lets make predictions!
+
+```{r, cache=TRUE}
+NBA_test = read.csv("NBA_test.csv")
+PointsPrediction = predict(PointsReg4,newdata = NBA_test)
+```
+
+Alright! now lets look at SSE, SST, R^2 and RMSE to understand how our model is performing!
+
+```{r, cache=TRUE}
+SSE = sum((PointsPrediction - NBA_test$PTS)^2)
+SSE
+SST = sum((mean(NBA$PTS)-NBA_test$PTS)^2)
+SST
+R2 = 1- SSE/SST
+R2
+RMSE = sqrt(SSE/nrow(NBA_test))
+RMSE
+```
+
+Alright! we are making an average error of `r RMSE`
+
+Lets include the points we have predicted into the Test dataset!
+```{r, cache = TRUE}
+NBA_test$PointsPrediction = PointsPrediction
+str(NBA_test)
+NBA_test
+```
+
+ENJOY!
