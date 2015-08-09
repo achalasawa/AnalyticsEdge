@@ -36,3 +36,20 @@ tapply(predictTrain, qualityTrain$PoorCare, mean)
 # Answering quick question
 QualityLog = glm(PoorCare ~ StartedOnCombination + ProviderCount, data=qualityTrain, family=binomial)
 summary(QualityLog)
+
+# Installing ROCR Package - Receiver Operating Characteristic
+install.packages("ROCR")
+library(ROCR)
+
+# Creating a new prediction object with ROCR
+ROCRpred= prediction(predictTrain, qualityTrain$PoorCare)
+ROCRperf= performance(ROCRpred, "tpr", "fpr")
+
+# Plotting ROCR performance curve
+plot(ROCRperf)
+
+# Adding colour and legend to the line graph
+plot(ROCRperf, colorize = TRUE)
+
+# Adding threshold values to the line graph
+plot(ROCRperf, colorize = TRUE, print.cutoffs.at=seq(0,1,0.1),text.adj=c(-0.2,1.7))
