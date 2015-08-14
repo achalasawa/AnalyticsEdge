@@ -53,3 +53,13 @@ plot(ROCRperf, colorize = TRUE)
 
 # Adding threshold values to the line graph
 plot(ROCRperf, colorize = TRUE, print.cutoffs.at=seq(0,1,0.1),text.adj=c(-0.2,1.7))
+
+#Calculating the Area under the ROC curve
+predictTest = predict(qualitylog, type="response", newdata=qualityTest)
+summary(predictTest)
+
+ROCRpredTest = prediction(predictTest, qualityTest$PoorCare)
+
+auc = as.numeric(performance(ROCRpredTest, "auc")@y.values)
+
+auc
